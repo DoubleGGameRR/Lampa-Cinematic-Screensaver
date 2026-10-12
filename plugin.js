@@ -1,4 +1,4 @@
-/* Lampa Cinematic Screensaver 2.0.0
+/* Lampa Cinematic Screensaver 2.1.0
  * Native Lampa Screensaver adapter. Free 4K videos from Pexels.
  * https://github.com/DoubleGGameRR/Lampa-Cinematic-Screensaver
  */
@@ -132,6 +132,14 @@
         this.startTimer = null;
         this.info = null;
         this.currentMode = mode();
+        this.widget = null;
+        this.clockText = null;
+        this.dateText = null;
+        this.weatherText = null;
+        this.clockTimer = null;
+        this.weatherTimer = null;
+        this.weatherRequest = null;
+        this.weatherUpdated = false;
     }
 
     Cinematic.prototype.fade = function () {
@@ -189,6 +197,7 @@
             pointerEvents: 'none', textShadow: '0 2px 12px #000'
         });
         this.root.append(this.info);
+        this.buildWeatherClock();
         this.chooseChapter();
         this.startClip(0, this.takeClip(), true);
     };
@@ -440,6 +449,143 @@
         this.info.css({ opacity: 1 });
     };
 
+    // Location: Микитинці / Mykytyntsi, Ivano-Frankivsk, Ukraine
+    // Coordinates 48°53'13"N, 24°45'4"E (Wikidata).
+    // Free non-commercial Open-Meteo endpoint, no key required.
+    Cinematic.prototype.buildWeatherClock = function () {
+        if (setting('overlay', 'true') === 'false') return;
+        var self = this;
+        this.widget = $('<div class="lcs-weather-clock"></div>').css({
+            position: 'absolute', left: '4.5%', bottom: '4.5%', zIndex: 15,
+            minWidth: '260px', maxWidth: '58%', padding: '20px 26px 18px',
+            borderRadius: '14px', borderLeft: '2px solid rgba(254,178,100,0.7)',
+            background: 'linear-gradient(90deg,rgba(8,6,16,0.62),rgba(8,6,16,0.14))',
+            color: '#fff', pointerEvents: 'none',
+            textShadow: '0 2px 9px rgba(0,0,0,0.96)',
+            boxShadow: '0 5px 30px rgba(0,0,0,0.14)'
+        });
+        this.clockText = $('<div></div>').css({
+            fontSize: '48px', fontWeight: '300', lineHeight: '1.05',
+            letterSpacing: '1px', fontVariantNumeric: 'tabular-nums'
+        });
+        this.dateText = $('<div></div>').css({
+            fontSize: '19px', fontWeight: '400', color: '#f0dfd5',
+            marginTop: '7px'
+        });
+        var place = $('<div></div>').text('Микитинцы · Ивано-Франковская обл.').css({
+            fontSize: '16px', color: '#e3dce8', marginTop: '14px', fontWeight: '400'
+        });
+        this.weatherText = $('<div></div>').text('Погода: загрузка…').css({
+            fontSize: '22px', marginTop: '6px', color: '#fff', fontWeight: '500'
+        });
+        var attribution = $('<div></div>').text('Погода: Open-Meteo · обновление каждые 20 мин').css({
+            fontSize: '11px', marginTop: '8px', color: '#c9bfcf'
+        });
+        this.widget.append(this.clockText);
+        this.widget.append(this.dateText);
+        this.widget.append(place);
+        this.widget.append(this.weatherText);
+        this.widget.append(attribution);
+        this.root.append(this.widget);
+        this.refreshClock();
+        this.loadWeather();
+        this.clockTimer = setInterval(function () { self.refreshClock(); }, 15000);
+        this.weatherTimer = setInterval(function () { self.loadWeather(); }, 20 * 60000);
+    };
+
+    Cinematic.prototype.refreshClock = function () {
+        if (this.destroyed || !this.clockText) return;
+        var now = new Date(), time, date;
+        try {
+            // Europe/Kiev is the backward-compatible IANA zone alias on older Tizen.
+            time = new Intl.DateTimeFormat('ru-RU', {
+                timeZone: 'Europe/Kiev', hour: '2-digit', minute: '2-digit',
+                hour12: false
+            }).format(now);
+            date = new Intl.DateTimeFormat('ru-RU', {
+                timeZone: 'Europe/Kiev', weekday: 'long', day: 'numeric', month: 'long'
+            }).format(now);
+        } catch (error) {
+            time = now.toLocaleTimeString('ru-RU').slice(0, 5);
+            date = now.toLocaleDateString('ru-RU', {
+                weekday: 'long', day: 'numeric', month: 'long'
+            });
+        }
+        this.clockText.text(time);
+        this.dateText.text(date.charAt(0).toUpperCase() + date.slice(1));
+    };
+
+    function weatherDescription(code, daytime) {
+        if (code === 0) return (daytime ? '☀  Ясно' : '☾  Ясная ночь');
+        if (code === 1 || code === 2) return '⛅  Переменная облачность';
+        if (code === 3) return '☁  Облачно';
+        if (code === 45 || code === 48) return '☁  Туман';
+        if (code === 51 || code === 53 || code === 55 ||
+            code === 56 || code === 57) return '☂  Морось';
+        if (code === 61 || code === 63 || code === 65 ||
+            code === 66 || code === 67 || code === 80 ||
+            code === 81 || code === 82) return '☂  Дождь';
+        if (code === 71 || code === 73 || code === 75 || code === 77 ||
+            code === 85 || code === 86) return '❄  Снег';
+        if (code === 95 || code === 96 || code === 99) return 'ϟ  Гроза';
+        return 'Погода';
+    }
+
+    Cinematic.prototype.loadWeather = function () {
+        if (this.destroyed || !this.weatherText || this.weatherRequest) return;
+        if (typeof XMLHttpRequest === 'undefined') {
+            this.weatherUnavailable();
+            return;
+        }
+        var self = this;
+        var request = new XMLHttpRequest();
+        this.weatherRequest = request;
+        var completed = false;
+        var finish = function (success) {
+            if (completed) return;
+            completed = true;
+            if (self.weatherRequest === request) self.weatherRequest = null;
+            if (!self.destroyed && !success) self.weatherUnavailable();
+        };
+        request.onreadystatechange = function () {
+            if (request.readyState !== 4) return;
+            if (self.destroyed) { finish(false); return; }
+            if (request.status !== 200) { finish(false); return; }
+            try {
+                var response = JSON.parse(request.responseText);
+                var w = response && response.current;
+                if (!w || typeof w.temperature_2m !== 'number') {
+                    finish(false);
+                    return;
+                }
+                var temperature = Math.round(w.temperature_2m);
+                var signed = (temperature > 0 ? '+' : '') + temperature + '°C';
+                self.weatherText.text(signed + '  ·  ' +
+                    weatherDescription(Number(w.weather_code), Number(w.is_day) === 1));
+                self.weatherUpdated = true;
+                finish(true);
+            } catch (error) { finish(false); }
+        };
+        request.onerror = function () { finish(false); };
+        request.ontimeout = function () { finish(false); };
+        request.timeout = 12000;
+        try {
+            request.open('GET',
+                'https://api.open-meteo.com/v1/forecast' +
+                '?latitude=48.88694&longitude=24.75111' +
+                '&current=temperature_2m,weather_code,is_day' +
+                '&timezone=Europe%2FKyiv&forecast_days=1',
+                true);
+            request.send(null);
+        } catch (error) { finish(false); }
+    };
+
+    Cinematic.prototype.weatherUnavailable = function () {
+        if (this.weatherText && !this.weatherUpdated) {
+            this.weatherText.text('Погода временно недоступна');
+        }
+    };
+
     Cinematic.prototype.render = function () {
         return this.root;
     };
@@ -449,6 +595,12 @@
         this.clearLoading();
         clearTimeout(this.startTimer);
         clearTimeout(this.transitionTimer);
+        clearInterval(this.clockTimer);
+        clearInterval(this.weatherTimer);
+        if (this.weatherRequest) {
+            try { this.weatherRequest.abort(); } catch (error) {}
+            this.weatherRequest = null;
+        }
         for (var i = 0; i < this.slots.length; i++) this.resetVideo(i);
         this.slots = [];
         if (this.root) this.root.remove();
@@ -507,6 +659,11 @@
         });
         Lampa.SettingsApi.addParam({
             component: COMPONENT,
+            param: { name: PREFIX + 'overlay', type: 'trigger', 'default': true },
+            field: { name: 'Время, дата и погода', description: 'Микитинцы · нижний левый угол · Open-Meteo' }
+        });
+        Lampa.SettingsApi.addParam({
+            component: COMPONENT,
             param: { name: PREFIX + 'preview', type: 'button' },
             field: { name: 'Показать сейчас', description: 'Запустить заставку без ожидания' },
             onChange: function () {
@@ -546,7 +703,7 @@
             else if (!document.hidden && nativeScreensaver()) applyNative();
         });
         applyNative();
-        console.log('[Cinematic Screensaver] 2.0.0 ready, 21 curated UHD clips, native crossfade');
+        console.log('[Cinematic Screensaver] 2.1.0 ready, 21 UHD clips, 5-10 min chapters, live Mykytyntsi weather');
     }
 
     if (window.appready && window.Lampa) init();
