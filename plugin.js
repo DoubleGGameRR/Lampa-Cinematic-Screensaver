@@ -63,6 +63,23 @@
         try { return !!(Lampa.Player && Lampa.Player.opened && Lampa.Player.opened()); }
         catch (error) { return false; }
     }
+    function loadNativeBackup() {
+        var existing = storage('native_backup_v1', null);
+        if (existing && typeof existing === 'object' &&
+            typeof existing.type === 'string' && existing.time) return existing;
+        var snapshot = {
+            active: getNative('screensaver', false),
+            type: getNative('screensaver_type', 'nature'),
+            time: getNative('screensaver_time', 3)
+        };
+        // Older installations might have started with our type already active.
+        if (snapshot.type === 'cinematic') {
+            snapshot = { active: false, type: 'nature', time: 3 };
+        }
+        try { Lampa.Storage.set(PREFIX + 'native_backup_v1', snapshot); }
+        catch (error) {}
+        return snapshot;
+    }
     function applyNative() {
         if (!nativeScreensaver()) return;
         if (enabled()) {
@@ -78,7 +95,8 @@
                 setNative('screensaver_type', previousNative.type);
                 setNative('screensaver_time', previousNative.time);
             } else setNative('screensaver', false);
-            Lampa.Screensaver.resetTimer();
+            if (!playerOpened()) Lampa.Screensaver.enable();
+            else Lampa.Screensaver.disable();
         }
     }
 
@@ -104,7 +122,7 @@
         var self = this;
         this.root = $('<div class="lcs-screen"></div>');
         this.root.css({
-            position: 'absolute', inset: 0, width: '100%', height: '100%',
+            position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
             overflow: 'hidden', background: '#06040a'
         });
         var video = document.createElement('video');
@@ -120,7 +138,7 @@
         video.volume = 0;
         video.controls = false;
         video.style.cssText =
-            'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;' +
+            'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;' +
             'background:#06040a;opacity:0;transition:opacity ' + getFade() + 'ms ease;';
         this.root.append(video);
 
@@ -360,11 +378,7 @@
             notify('Cinematic: эта версия Lampa не поддерживает встроенный Screensaver');
             return;
         }
-        previousNative = {
-            active: getNative('screensaver', false),
-            type: getNative('screensaver_type', 'nature'),
-            time: getNative('screensaver_time', 3)
-        };
+        previousNative = loadNativeBackup();
         Lampa.Screensaver.class_list.cinematic = Cinematic;
         addSettings();
         if (Lampa.Player && Lampa.Player.listener && Lampa.Player.listener.follow) {
