@@ -1,4 +1,4 @@
-/* Lampa Cinematic Screensaver 2.1.0
+/* Lampa Cinematic Screensaver 2.2.0
  * Native Lampa Screensaver adapter. Free 4K videos from Pexels.
  * https://github.com/DoubleGGameRR/Lampa-Cinematic-Screensaver
  */
@@ -12,6 +12,10 @@
     var COMPONENT = 'lcs_cinematic';
     var MAX_LOAD_MS = 30000;
     var CLIPS = [
+        // Video-only collection: moving drone footage, rain, animated flames/fog.
+        { theme:'autumn', name:'Пролёт над осенним лесом', url:'https://videos.pexels.com/video-files/5563083/5563083-uhd_3840_2160_24fps.mp4', duration:30, page:'https://www.pexels.com/video/beautiful-trees-in-the-forest-during-autumn-5563083/' },
+        { theme:'halloween', name:'Огненная 3D-тыква', url:'https://videos.pexels.com/video-files/9867271/9867271-uhd_3840_2160_24fps.mp4', duration:20, page:'https://www.pexels.com/ru-ru/video/9867271/' },
+        { theme:'halloween', name:'Призрак среди тыкв', url:'https://videos.pexels.com/video-files/33791637/14343127_3840_2160_25fps.mp4', duration:20, page:'https://www.pexels.com/video/spooky-halloween-ghost-and-pumpkin-decor-33791637/' },
         // Each URL is the UHD 3840x2160 variant returned by Pexels's download redirect.
         { theme:'autumn', name:'Туманная осенняя дорога', url:'https://videos.pexels.com/video-files/10323686/10323686-hd_3840_2160_30fps.mp4', duration:60, page:'https://www.pexels.com/video/driving-ground-road-through-forest-to-fields-in-autumn-10323686/' },
         { theme:'autumn', name:'Ручей среди красной листвы', url:'https://videos.pexels.com/video-files/10402872/10402872-hd_3840_2160_24fps.mp4', duration:72, page:'https://www.pexels.com/video/stream-in-forest-10402872/' },
@@ -135,11 +139,17 @@
         this.widget = null;
         this.clockText = null;
         this.dateText = null;
+        this.tempText = null;
         this.weatherText = null;
         this.clockTimer = null;
         this.weatherTimer = null;
         this.weatherRequest = null;
         this.weatherUpdated = false;
+        this.clockPanel = null;
+        this.weatherPanel = null;
+        this.motionTimer = null;
+        this.motionPosition = 0;
+        this.motionStalls = 0;
     }
 
     Cinematic.prototype.fade = function () {
@@ -200,6 +210,7 @@
         this.buildWeatherClock();
         this.chooseChapter();
         this.startClip(0, this.takeClip(), true);
+        this.startMotionGuard();
     };
 
     Cinematic.prototype.chooseChapter = function () {
@@ -241,6 +252,24 @@
                 if (CLIPS[i].theme === this.theme && !this.failedClips[i]) this.playlist.push(i);
             }
             shuffle(this.playlist);
+            // Always start each chapter with an unmistakably moving video.
+            var highlights = {
+                autumn: 'Пролёт над осенним лесом',
+                halloween: 'Огненная 3D-тыква',
+                neon: 'Дождливый Лондон',
+                cozy: 'Горящий камин'
+            };
+            var highlight = highlights[this.theme];
+            if (this.playlist.length && this.lastClip < 0 && highlight) {
+                for (var h = 0; h < this.playlist.length; h++) {
+                    if (CLIPS[this.playlist[h]].name === highlight) {
+                        var first = this.playlist[0];
+                        this.playlist[0] = this.playlist[h];
+                        this.playlist[h] = first;
+                        break;
+                    }
+                }
+            }
             if (this.playlist.length > 1 && this.playlist[0] === this.lastClip) {
                 this.playlist.push(this.playlist.shift());
             }
@@ -346,6 +375,8 @@
         if (slot === this.pending) {
             this.crossfade();
         } else if (slot === this.active) {
+            this.motionPosition = -1;
+            this.motionStalls = 0;
             var self = this;
             this.startTimer = setTimeout(function () {
                 if (!self.destroyed) target.video.style.opacity = '1';
@@ -411,6 +442,8 @@
             self.transitionTimer = setTimeout(function () {
                 if (self.destroyed) return;
                 self.active = newSlot;
+                self.motionPosition = -1;
+                self.motionStalls = 0;
                 self.pending = -1;
                 self.swapping = false;
                 self.resetVideo(oldSlot);
@@ -419,6 +452,36 @@
                 self.onTime(newSlot);
             }, self.fade() + 100);
         }, 100);
+    };
+
+    // A decoder can display its first frame indefinitely without firing "error".
+    // Detect that state and skip the broken stream instead of showing a "photo".
+    Cinematic.prototype.startMotionGuard = function () {
+        var self = this;
+        this.motionPosition = -1;
+        this.motionStalls = 0;
+        this.motionTimer = setInterval(function () {
+            if (self.destroyed || self.swapping || self.active < 0) return;
+            var target = self.slots[self.active];
+            if (!target || target.clip < 0) return;
+            if (target.video.ended) {
+                self.onEnded(self.active);
+                return;
+            }
+            if (!target.playing) return; // The initial load watchdog handles that case.
+            var position = Number(target.video.currentTime);
+            if (!isFinite(position)) return;
+            if (position > self.motionPosition + 0.12) {
+                self.motionPosition = position;
+                self.motionStalls = 0;
+            } else {
+                self.motionStalls++;
+                if (self.motionStalls >= 3) {
+                    self.motionStalls = 0;
+                    self.onError(self.active);
+                }
+            }
+        }, 6000);
     };
 
     Cinematic.prototype.onError = function (slot) {
@@ -455,38 +518,62 @@
     Cinematic.prototype.buildWeatherClock = function () {
         if (setting('overlay', 'true') === 'false') return;
         var self = this;
-        this.widget = $('<div class="lcs-weather-clock"></div>').css({
-            position: 'absolute', left: '4.5%', bottom: '4.5%', zIndex: 15,
-            minWidth: '260px', maxWidth: '58%', padding: '20px 26px 18px',
-            borderRadius: '14px', borderLeft: '2px solid rgba(254,178,100,0.7)',
-            background: 'linear-gradient(90deg,rgba(8,6,16,0.62),rgba(8,6,16,0.14))',
+        // Two independent, large but unobtrusive overlays.
+        // Weather: bottom left. Clock & date: bottom right.
+        this.weatherPanel = $('<div class="lcs-weather"></div>').css({
+            position: 'absolute', left: '3.5%', bottom: '4%', zIndex: 25,
+            width: '37%', maxWidth: '630px', padding: '20px 28px 22px',
+            borderRadius: '17px', borderLeft: '4px solid rgba(255,164,74,0.8)',
+            background: 'linear-gradient(90deg,rgba(7,6,13,0.79),rgba(7,6,13,0.20))',
             color: '#fff', pointerEvents: 'none',
-            textShadow: '0 2px 9px rgba(0,0,0,0.96)',
-            boxShadow: '0 5px 30px rgba(0,0,0,0.14)'
+            textShadow: '0 2px 11px rgba(0,0,0,0.96)',
+            boxShadow: '0 6px 30px rgba(0,0,0,0.22)'
+        });
+        var place = $('<div></div>').text('МИКИТИНЦЫ').css({
+            fontSize: '24px', fontWeight: '600', letterSpacing: '2px',
+            color: '#f6e5d1'
+        });
+        var region = $('<div></div>').text('Ивано-Франковская область').css({
+            fontSize: '18px', marginTop: '5px', color: '#e3dce8'
+        });
+        this.tempText = $('<div></div>').text('—°C').css({
+            fontSize: '64px', lineHeight: '1.05', fontWeight: '400',
+            marginTop: '14px', fontVariantNumeric: 'tabular-nums'
+        });
+        this.weatherText = $('<div></div>').text('Получаем погоду…').css({
+            fontSize: '27px', marginTop: '6px', color: '#fff', fontWeight: '400'
+        });
+        var source = $('<div></div>').text('Погода: Open-Meteo').css({
+            fontSize: '14px', marginTop: '12px', color: '#d2cbd7'
+        });
+        this.weatherPanel.append(place);
+        this.weatherPanel.append(region);
+        this.weatherPanel.append(this.tempText);
+        this.weatherPanel.append(this.weatherText);
+        this.weatherPanel.append(source);
+        this.root.append(this.weatherPanel);
+
+        this.clockPanel = $('<div class="lcs-clock"></div>').css({
+            position: 'absolute', right: '3.5%', bottom: '4%', zIndex: 25,
+            width: '34%', maxWidth: '580px', padding: '22px 28px 24px',
+            borderRadius: '17px', borderRight: '4px solid rgba(175,130,255,0.72)',
+            background: 'linear-gradient(270deg,rgba(7,6,13,0.77),rgba(7,6,13,0.18))',
+            color: '#fff', textAlign: 'right', pointerEvents: 'none',
+            textShadow: '0 2px 12px rgba(0,0,0,0.96)',
+            boxShadow: '0 6px 30px rgba(0,0,0,0.20)'
         });
         this.clockText = $('<div></div>').css({
-            fontSize: '48px', fontWeight: '300', lineHeight: '1.05',
-            letterSpacing: '1px', fontVariantNumeric: 'tabular-nums'
+            fontSize: '88px', fontWeight: '300', lineHeight: '1.04',
+            letterSpacing: '2px', fontVariantNumeric: 'tabular-nums'
         });
         this.dateText = $('<div></div>').css({
-            fontSize: '19px', fontWeight: '400', color: '#f0dfd5',
-            marginTop: '7px'
+            fontSize: '28px', fontWeight: '400', color: '#f0e9f6',
+            marginTop: '12px'
         });
-        var place = $('<div></div>').text('Микитинцы · Ивано-Франковская обл.').css({
-            fontSize: '16px', color: '#e3dce8', marginTop: '14px', fontWeight: '400'
-        });
-        this.weatherText = $('<div></div>').text('Погода: загрузка…').css({
-            fontSize: '22px', marginTop: '6px', color: '#fff', fontWeight: '500'
-        });
-        var attribution = $('<div></div>').text('Погода: Open-Meteo · обновление каждые 20 мин').css({
-            fontSize: '11px', marginTop: '8px', color: '#c9bfcf'
-        });
-        this.widget.append(this.clockText);
-        this.widget.append(this.dateText);
-        this.widget.append(place);
-        this.widget.append(this.weatherText);
-        this.widget.append(attribution);
-        this.root.append(this.widget);
+        this.clockPanel.append(this.clockText);
+        this.clockPanel.append(this.dateText);
+        this.root.append(this.clockPanel);
+        this.widget = this.weatherPanel; // Keep legacy reference for integrations.
         this.refreshClock();
         this.loadWeather();
         this.clockTimer = setInterval(function () { self.refreshClock(); }, 15000);
@@ -560,7 +647,8 @@
                 }
                 var temperature = Math.round(w.temperature_2m);
                 var signed = (temperature > 0 ? '+' : '') + temperature + '°C';
-                self.weatherText.text(signed + '  ·  ' +
+                self.tempText.text(signed);
+                self.weatherText.text(
                     weatherDescription(Number(w.weather_code), Number(w.is_day) === 1));
                 self.weatherUpdated = true;
                 finish(true);
@@ -582,6 +670,7 @@
 
     Cinematic.prototype.weatherUnavailable = function () {
         if (this.weatherText && !this.weatherUpdated) {
+            if (this.tempText) this.tempText.text('—°C');
             this.weatherText.text('Погода временно недоступна');
         }
     };
@@ -597,6 +686,7 @@
         clearTimeout(this.transitionTimer);
         clearInterval(this.clockTimer);
         clearInterval(this.weatherTimer);
+        clearInterval(this.motionTimer);
         if (this.weatherRequest) {
             try { this.weatherRequest.abort(); } catch (error) {}
             this.weatherRequest = null;
@@ -660,7 +750,7 @@
         Lampa.SettingsApi.addParam({
             component: COMPONENT,
             param: { name: PREFIX + 'overlay', type: 'trigger', 'default': true },
-            field: { name: 'Время, дата и погода', description: 'Микитинцы · нижний левый угол · Open-Meteo' }
+            field: { name: 'Время, дата и погода', description: 'Слева — погода, справа — крупные часы и дата' }
         });
         Lampa.SettingsApi.addParam({
             component: COMPONENT,
@@ -703,7 +793,7 @@
             else if (!document.hidden && nativeScreensaver()) applyNative();
         });
         applyNative();
-        console.log('[Cinematic Screensaver] 2.1.0 ready, 21 UHD clips, 5-10 min chapters, live Mykytyntsi weather');
+        console.log('[Cinematic Screensaver] 2.2.0 ready: 24 motion clips, split weather/clock, playback watchdog');
     }
 
     if (window.appready && window.Lampa) init();
