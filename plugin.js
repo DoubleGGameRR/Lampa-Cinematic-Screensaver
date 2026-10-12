@@ -60,10 +60,6 @@
         try { if (Lampa.Noty && Lampa.Noty.show) Lampa.Noty.show(message); }
         catch (error) {}
     }
-    function getFade() {
-        var value = parseInt(setting('fade', '2800'), 10);
-        return value === 500 || value === 900 || value === 1400 ? value : 900;
-    }
     function mode() {
         var value = setting('mode', 'shuffle');
         return /^(shuffle|cycle|autumn|halloween|neon|cozy)$/.test(value) ? value : 'shuffle';
@@ -162,7 +158,7 @@
                 video.setAttribute('playsinline', '');
                 video.setAttribute('webkit-playsinline', '');
                 video.setAttribute('preload', 'auto');
-                video.autoplay = true;
+                video.autoplay = false;
                 video.playsInline = true;
                 video.muted = true;
                 video.defaultMuted = true;
@@ -241,7 +237,9 @@
             }
             this.playIndex = 0;
         }
-        if (!this.playlist.length) return -1;
+        while (this.playIndex < this.playlist.length &&
+               this.failedClips[this.playlist[this.playIndex]]) this.playIndex++;
+        if (this.playIndex >= this.playlist.length) return -1;
         this.lastClip = this.playlist[this.playIndex++];
         return this.lastClip;
     };
@@ -503,7 +501,7 @@
         Lampa.SettingsApi.addParam({
             component: COMPONENT,
             param: { name: PREFIX + 'fade', type: 'select', values: {
-                '500': 'Быстро', '2800': 'Плавно', '1400': 'Очень плавно'
+                '1600': 'Плавно · 1.6 с', '2800': 'Кинематографично · 2.8 с', '4000': 'Очень плавно · 4 с'
             }, 'default': '2800' },
             field: { name: 'Переходы', description: 'Настоящий crossfade: новое видео поверх предыдущего' }
         });
