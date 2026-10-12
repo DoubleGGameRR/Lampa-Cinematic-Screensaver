@@ -109,7 +109,7 @@ assert.deepEqual(settings.map((x) => x.param.name),
 const Saver = lampa.Screensaver.class_list.cinematic;
 const screenshots = [];
 for (const [mode, count] of [
-    ['halloween', 9], ['autumn', 5], ['neon', 4], ['cozy', 3]
+    ['halloween', 11], ['autumn', 6], ['neon', 4], ['cozy', 3]
 ]) {
     values.lcs_mode = mode;
     const saver = new Saver();
@@ -126,12 +126,21 @@ saver.create();
 assert.equal(saver.slots.length, 2);
 assert.ok(saver.clockText.value.includes(':'));
 assert.ok(saver.dateText.value.length > 4);
-assert.match(saver.weatherText.value, /\+8°C/);
+assert.match(saver.tempText.value, /\+8°C/);
+assert.match(saver.weatherText.value, /Облачно/);
+assert.equal(saver.weatherPanel.style.left, '3.5%');
+assert.equal(saver.weatherPanel.style.bottom, '4%');
+assert.equal(saver.clockPanel.style.right, '3.5%');
+assert.equal(saver.clockPanel.style.bottom, '4%');
+assert.equal(saver.tempText.style.fontSize, '64px');
+assert.equal(saver.clockText.style.fontSize, '88px');
+assert.equal(saver.dateText.style.fontSize, '28px');
+assert.equal(saver.slots[0].video.src.match(/\.mp4$/) !== null, true);
 assert.equal(calls.requests.length, 1);
 assert.ok(calls.requests[0].includes('latitude=48.88694'));
 assert.ok(calls.requests[0].includes('longitude=24.75111'));
 assert.ok(calls.requests[0].includes('timezone=Europe%2FKyiv'));
-assert.equal(intervals.size, 2);
+assert.equal(intervals.size, 3);
 advance(100);
 const original = saver.active;
 const active = saver.slots[original].video;
@@ -149,6 +158,12 @@ advance(3000);
 assert.equal(saver.active, 1 - original);
 assert.equal(saver.pending, -1);
 assert.equal(saver.slots[original].clip, -1);
+// Force repeated frozen frames and verify automatic skip.
+const stalledClip = saver.slots[saver.active].clip;
+const motionGuard = [...intervals.values()].find((entry) => entry.ms === 6000);
+assert.ok(motionGuard);
+for (let i = 0; i < 4; i++) motionGuard.f();
+assert.notEqual(saver.slots[saver.active].clip, stalledClip);
 saver.destroy();
 assert.equal(saver.destroyed, true);
 assert.equal(intervals.size, 0);
@@ -162,4 +177,4 @@ assert.equal(values.screensaver_type, 'nature');
 assert.equal(values.screensaver_time, 10);
 events.start();
 assert.ok(calls.disable >= 1);
-console.log('PASS: 21 clips, 9 Halloween videos, smooth crossfade, 5–10 minute chapters, Mykytyntsi weather/clock, cleanup');
+console.log('PASS: 24 MP4 videos, split large weather/clock, real crossfade, frozen-video skip, cleanup');
