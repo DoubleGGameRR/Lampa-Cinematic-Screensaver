@@ -1,4 +1,4 @@
-/* Lampa Cinematic Screensaver 1.0.0
+/* Lampa Cinematic Screensaver 2.0.0
  * Native Lampa Screensaver adapter. Free 4K videos from Pexels.
  * https://github.com/DoubleGGameRR/Lampa-Cinematic-Screensaver
  */
@@ -10,17 +10,30 @@
 
     var PREFIX = 'lcs_';
     var COMPONENT = 'lcs_cinematic';
-    var MAX_LOAD_MS = 20000;
+    var MAX_LOAD_MS = 30000;
     var CLIPS = [
-        { theme: 'autumn', name: 'Осенняя река', url: 'https://videos.pexels.com/video-files/5698883/5698883-uhd_3840_2160_30fps.mp4', page: 'https://www.pexels.com/video/forest-in-autumn-5698883/' },
-        { theme: 'autumn', name: 'Осенний лес', url: 'https://videos.pexels.com/video-files/5592328/5592328-uhd_3840_2160_24fps.mp4', page: 'https://www.pexels.com/video/low-angle-shot-of-autumn-forest-5592328/' },
-        { theme: 'autumn', name: 'Лес с высоты', url: 'https://videos.pexels.com/video-files/10286777/10286777-hd_3840_2160_24fps.mp4', page: 'https://www.pexels.com/video/forest-on-hill-in-autumn-10286777/' },
-        { theme: 'halloween', name: 'Тыква в тумане', url: 'https://videos.pexels.com/video-files/33791636/14343079_3840_2160_25fps.mp4', page: 'https://www.pexels.com/video/creepy-halloween-jack-o-lantern-scene-33791636/' },
-        { theme: 'halloween', name: 'Хэллоуинские фонари', url: 'https://videos.pexels.com/video-files/34189220/14491974_3840_2160_25fps.mp4', page: 'https://www.pexels.com/video/spooky-halloween-jack-o-lanterns-in-darkness-34189220/' },
-        { theme: 'neon', name: 'Городские огни', url: 'https://videos.pexels.com/video-files/16834483/16834483-uhd_3840_2160_24fps.mp4', page: 'https://www.pexels.com/video/a-car-is-parked-in-front-of-a-neon-sign-16834483/' },
-        { theme: 'neon', name: 'Неоновые улицы', url: 'https://videos.pexels.com/video-files/32013493/13644866_3840_2160_25fps.mp4', page: 'https://www.pexels.com/video/nighttime-street-scene-with-neon-signs-32013493/' },
-        { theme: 'cozy', name: 'Уютная гостиная', url: 'https://videos.pexels.com/video-files/2110972/2110972-uhd_3840_2160_30fps.mp4', page: 'https://www.pexels.com/video/a-fireplace-in-a-living-room-2110972/' },
-        { theme: 'cozy', name: 'Живой огонь', url: 'https://videos.pexels.com/video-files/10482174/10482174-hd_3840_2160_24fps.mp4', page: 'https://www.pexels.com/video/close-up-on-fire-in-fireplace-10482174/' }
+        // Each URL is the UHD 3840x2160 variant returned by Pexels's download redirect.
+        { theme:'autumn', name:'Туманная осенняя дорога', url:'https://videos.pexels.com/video-files/10323686/10323686-hd_3840_2160_30fps.mp4', duration:60, page:'https://www.pexels.com/video/driving-ground-road-through-forest-to-fields-in-autumn-10323686/' },
+        { theme:'autumn', name:'Ручей среди красной листвы', url:'https://videos.pexels.com/video-files/10402872/10402872-hd_3840_2160_24fps.mp4', duration:72, page:'https://www.pexels.com/video/stream-in-forest-10402872/' },
+        { theme:'autumn', name:'Золотой лес', url:'https://videos.pexels.com/video-files/7209440/7209440-uhd_3840_2160_30fps.mp4', duration:60, page:'https://www.pexels.com/video/forest-during-autumn-season-7209440/' },
+        { theme:'autumn', name:'Туман над лесным озером', url:'https://videos.pexels.com/video-files/13602957/13602957-uhd_3840_2160_30fps.mp4', duration:68, page:'https://www.pexels.com/video/fog-over-lake-and-woods-13602957/' },
+        { theme:'autumn', name:'Осенняя лесная река', url:'https://videos.pexels.com/video-files/6435067/6435067-uhd_3840_2160_30fps.mp4', duration:60, page:'https://www.pexels.com/video/flowing-river-in-the-forest-6435067/' },
+        { theme:'halloween', name:'Тыква и мистический туман', url:'https://videos.pexels.com/video-files/33791668/14343144_3840_2160_25fps.mp4', duration:72, page:'https://www.pexels.com/video/spooky-halloween-pumpkin-with-fog-effect-33791668/' },
+        { theme:'halloween', name:'Череп при свечах', url:'https://videos.pexels.com/video-files/1730395/1730395-uhd_3840_2160_25fps.mp4', duration:60, page:'https://www.pexels.com/video/a-skull-with-lighted-tea-candles-1730395/' },
+        { theme:'halloween', name:'Мистические свечи', url:'https://videos.pexels.com/video-files/33791642/14343115_3840_2160_25fps.mp4', duration:51, page:'https://www.pexels.com/video/spooky-candlelit-halloween-atmosphere-33791642/' },
+        { theme:'halloween', name:'Череп в тумане', url:'https://videos.pexels.com/video-files/33791646/14343055_3840_2160_25fps.mp4', duration:47, page:'https://www.pexels.com/video/spooky-skull-with-candle-lights-for-halloween-33791646/' },
+        { theme:'halloween', name:'Резные тыквы', url:'https://videos.pexels.com/video-files/34168522/14485465_3840_2160_25fps.mp4', duration:37, page:'https://www.pexels.com/video/carving-pumpkins-for-a-spooky-halloween-34168522/' },
+        { theme:'halloween', name:'Призрак и светящиеся тыквы', url:'https://videos.pexels.com/video-files/29142708/12588140_3840_2160_25fps.mp4', duration:21, page:'https://www.pexels.com/video/spooky-halloween-decor-with-ghost-figure-29142708/' },
+        { theme:'halloween', name:'Осенние украшения и фонари', url:'https://videos.pexels.com/video-files/34388791/14567828_3840_2160_25fps.mp4', duration:21, page:'https://www.pexels.com/video/halloween-pumpkin-carving-workshop-setup-34388791/' },
+        { theme:'halloween', name:'Мистическая рука в свечах', url:'https://videos.pexels.com/video-files/33791640/14343167_3840_2160_25fps.mp4', duration:19, page:'https://www.pexels.com/video/spooky-halloween-hand-amidst-flickering-candles-33791640/' },
+        { theme:'halloween', name:'Светящиеся тыквы в темноте', url:'https://videos.pexels.com/video-files/34189220/14491974_3840_2160_25fps.mp4', duration:18, page:'https://www.pexels.com/video/spooky-halloween-jack-o-lanterns-in-darkness-34189220/' },
+        { theme:'neon', name:'Тихая дождливая улица', url:'https://videos.pexels.com/video-files/15596316/15596316-uhd_3840_2160_24fps.mp4', duration:17, page:'https://www.pexels.com/video/a-rainy-night-in-a-city-street-with-motorcycles-parked-on-the-side-15596316/' },
+        { theme:'neon', name:'Дождливый Лондон', url:'https://videos.pexels.com/video-files/5108691/5108691-uhd_3840_2160_30fps.mp4', duration:16, page:'https://www.pexels.com/video/rainy-night-5108691/' },
+        { theme:'neon', name:'Огни у реки', url:'https://videos.pexels.com/video-files/12737255/12737255-uhd_3840_2160_24fps.mp4', duration:25, page:'https://www.pexels.com/video/city-at-night-12737255/' },
+        { theme:'neon', name:'Ночной город', url:'https://videos.pexels.com/video-files/32013493/13644866_3840_2160_25fps.mp4', duration:20, page:'https://www.pexels.com/video/nighttime-street-scene-with-neon-signs-32013493/' },
+        { theme:'cozy', name:'Свеча крупным планом', url:'https://videos.pexels.com/video-files/14171491/14171491-uhd_3840_2160_25fps.mp4', duration:237, page:'https://www.pexels.com/video/flame-in-wax-candle-14171491/' },
+        { theme:'cozy', name:'Камин в гостиной', url:'https://videos.pexels.com/video-files/2110972/2110972-uhd_3840_2160_30fps.mp4', duration:30, page:'https://www.pexels.com/video/a-fireplace-in-a-living-room-2110972/' },
+        { theme:'cozy', name:'Горящий камин', url:'https://videos.pexels.com/video-files/10482174/10482174-hd_3840_2160_24fps.mp4', duration:30, page:'https://www.pexels.com/video/close-up-on-fire-in-fireplace-10482174/' }
     ];
 
     var ready = false;
@@ -48,7 +61,7 @@
         catch (error) {}
     }
     function getFade() {
-        var value = parseInt(setting('fade', '900'), 10);
+        var value = parseInt(setting('fade', '2800'), 10);
         return value === 500 || value === 900 || value === 1400 ? value : 900;
     }
     function mode() {
@@ -100,201 +113,333 @@
         }
     }
 
+    var THEME_ORDER = ['autumn', 'halloween', 'neon', 'cozy'];
+
     function Cinematic() {
         this.root = null;
-        this.video = null;
-        this.timer = null;
-        this.stallTimer = null;
-        this.current = -1;
-        this.tried = {};
-        this.triedCount = 0;
+        this.slots = [];
+        this.active = -1;
+        this.pending = -1;
+        this.theme = '';
+        this.themeStarted = 0;
+        this.chapterOrder = [];
+        this.chapterIndex = 0;
+        this.playlist = [];
+        this.playIndex = 0;
+        this.lastClip = -1;
+        this.failedClips = {};
+        this.failedCount = 0;
         this.destroyed = false;
-        this.transitioning = false;
-        this.starting = false;
-        this.started = false;
-        this.lastTime = -1;
-        this.queue = [];
-        this.order = [];
-        this.index = 0;
+        this.swapping = false;
+        this.transitionTimer = null;
+        this.loadingTimer = null;
+        this.startTimer = null;
+        this.info = null;
+        this.currentMode = mode();
     }
+
+    Cinematic.prototype.fade = function () {
+        var value = parseInt(setting('fade', '2800'), 10);
+        return value === 1600 || value === 2800 || value === 4000 ? value : 2800;
+    };
+
+    Cinematic.prototype.minutes = function () {
+        var value = parseInt(setting('chapter', '7'), 10);
+        return value === 5 || value === 7 || value === 10 ? value : 7;
+    };
 
     Cinematic.prototype.create = function () {
         var self = this;
         this.root = $('<div class="lcs-screen"></div>');
         this.root.css({
             position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-            overflow: 'hidden', background: '#06040a'
+            overflow: 'hidden', background: '#08060b'
         });
-        var video = document.createElement('video');
-        this.video = video;
-        video.setAttribute('playsinline', '');
-        video.setAttribute('webkit-playsinline', '');
-        video.setAttribute('muted', '');
-        video.setAttribute('preload', 'auto');
-        video.autoplay = true;
-        video.playsInline = true;
-        video.muted = true;
-        video.defaultMuted = true;
-        video.volume = 0;
-        video.controls = false;
-        video.style.cssText =
-            'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;' +
-            'background:#06040a;opacity:0;transition:opacity ' + getFade() + 'ms ease;';
-        this.root.append(video);
-
-        // One decoder at a time: more reliable for Samsung Tizen than dual 4K videos.
-        video.addEventListener('playing', function () {
-            if (self.destroyed) return;
-            self.starting = false;
-            self.started = true;
-            self.transitioning = false;
-            self.tried = {};
-            self.triedCount = 0;
-            self.lastTime = -1;
-            self.clearStall();
-            self.armStall();
-            setTimeout(function () {
-                if (!self.destroyed) video.style.opacity = '1';
-            }, 70);
-        });
-        video.addEventListener('timeupdate', function () {
-            if (self.destroyed || self.transitioning || !self.started) return;
-            if (video.currentTime > self.lastTime + 0.25) {
-                self.lastTime = video.currentTime;
-                self.armStall();
-            }
-            if (isFinite(video.duration) &&
-                video.duration > 0 && video.currentTime >= video.duration - 1.4) {
-                self.next();
-            }
-        });
-        video.addEventListener('ended', function () { self.next(); });
-        video.addEventListener('error', function () {
-            if (!self.destroyed && !self.transitioning) self.failed();
-        });
-        video.addEventListener('stalled', function () {
-            if (!self.destroyed && !self.transitioning) self.armStall();
-        });
-
-        this.preparePlaylist();
-        this.next();
-    };
-
-    Cinematic.prototype.preparePlaylist = function () {
-        var type = mode(), i;
-        this.order = [];
-        for (i = 0; i < CLIPS.length; i++) {
-            if (type === 'shuffle' || type === 'cycle' || CLIPS[i].theme === type) {
-                this.order.push(i);
-            }
+        for (var i = 0; i < 2; i++) {
+            (function (slotIndex) {
+                var video = document.createElement('video');
+                video.setAttribute('muted', '');
+                video.setAttribute('playsinline', '');
+                video.setAttribute('webkit-playsinline', '');
+                video.setAttribute('preload', 'auto');
+                video.autoplay = true;
+                video.playsInline = true;
+                video.muted = true;
+                video.defaultMuted = true;
+                video.volume = 0;
+                video.controls = false;
+                video.preload = 'auto';
+                video.style.cssText =
+                    'position:absolute;top:0;left:0;width:100%;height:100%;' +
+                    'object-fit:cover;opacity:0;z-index:' + (slotIndex+1) + ';' +
+                    'transition:opacity ' + self.fade() + 'ms ease-in-out;' +
+                    'background:transparent;';
+                self.slots.push({
+                    video: video, clip: -1, loaded: false,
+                    starting: false, playing: false, exhausted: false
+                });
+                self.root.append(video);
+                video.addEventListener('loadeddata', function () { self.onLoaded(slotIndex); });
+                video.addEventListener('canplay', function () { self.onLoaded(slotIndex); });
+                video.addEventListener('playing', function () { self.onPlaying(slotIndex); });
+                video.addEventListener('timeupdate', function () { self.onTime(slotIndex); });
+                video.addEventListener('ended', function () { self.onEnded(slotIndex); });
+                video.addEventListener('error', function () { self.onError(slotIndex); });
+            })(i);
         }
-        if (type === 'shuffle') {
-            for (i = this.order.length - 1; i > 0; i--) {
-                var j = Math.floor(Math.random() * (i + 1));
-                var tmp = this.order[i];
-                this.order[i] = this.order[j];
-                this.order[j] = tmp;
+        this.info = $('<div></div>').css({
+            position: 'absolute', bottom: '6%', left: '5%', width: '90%',
+            color: '#e9d8ef', fontSize: '1.25em', opacity: 0, zIndex: 9,
+            pointerEvents: 'none', textShadow: '0 2px 12px #000'
+        });
+        this.root.append(this.info);
+        this.chooseChapter();
+        this.startClip(0, this.takeClip(), true);
+    };
+
+    Cinematic.prototype.chooseChapter = function () {
+        this.currentMode = mode();
+        if (this.currentMode === 'shuffle' || this.currentMode === 'cycle') {
+            if (this.chapterIndex >= this.chapterOrder.length) {
+                this.chapterOrder = THEME_ORDER.slice();
+                if (this.currentMode === 'shuffle') shuffle(this.chapterOrder);
+                if (this.chapterOrder.length > 1 && this.chapterOrder[0] === this.theme) {
+                    this.chapterOrder.push(this.chapterOrder.shift());
+                }
+                this.chapterIndex = 0;
             }
-            if (this.order.length > 1 && this.order[0] === this.current) {
-                this.order.push(this.order.shift());
-            }
+            this.theme = this.chapterOrder[this.chapterIndex++];
+        } else {
+            this.theme = this.currentMode;
         }
-        this.index = 0;
+        this.themeStarted = Date.now();
+        this.playlist = [];
+        this.playIndex = 0;
     };
 
-    Cinematic.prototype.pick = function () {
-        if (this.index >= this.order.length) this.preparePlaylist();
-        if (!this.order.length) return -1;
-        return this.order[this.index++];
+    function shuffle(items) {
+        for (var i = items.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var swap = items[i];
+            items[i] = items[j];
+            items[j] = swap;
+        }
+    }
+
+    Cinematic.prototype.takeClip = function () {
+        if (Date.now() - this.themeStarted >= this.minutes() * 60000) {
+            this.chooseChapter();
+        }
+        if (this.playIndex >= this.playlist.length) {
+            this.playlist = [];
+            for (var i = 0; i < CLIPS.length; i++) {
+                if (CLIPS[i].theme === this.theme && !this.failedClips[i]) this.playlist.push(i);
+            }
+            shuffle(this.playlist);
+            if (this.playlist.length > 1 && this.playlist[0] === this.lastClip) {
+                this.playlist.push(this.playlist.shift());
+            }
+            this.playIndex = 0;
+        }
+        if (!this.playlist.length) return -1;
+        this.lastClip = this.playlist[this.playIndex++];
+        return this.lastClip;
     };
 
-    Cinematic.prototype.clearStall = function () {
-        clearTimeout(this.stallTimer);
-        this.stallTimer = null;
+    Cinematic.prototype.clearLoading = function () {
+        clearTimeout(this.loadingTimer);
+        this.loadingTimer = null;
     };
 
-    Cinematic.prototype.armStall = function () {
-        var self = this;
-        this.clearStall();
-        this.stallTimer = setTimeout(function () { self.failed(); }, MAX_LOAD_MS);
-    };
-
-    Cinematic.prototype.clearTimers = function () {
-        clearTimeout(this.timer);
-        this.timer = null;
-        this.clearStall();
-    };
-
-    Cinematic.prototype.next = function () {
-        var self = this;
-        if (this.destroyed || this.transitioning) return;
-        this.transitioning = true;
-        this.clearTimers();
-        this.video.style.opacity = '0';
-        this.timer = setTimeout(function () {
-            if (self.destroyed) return;
-            self.playNext();
-        }, this.started ? getFade() : 0);
-    };
-
-    Cinematic.prototype.playNext = function () {
-        var self = this;
-        if (this.destroyed) return;
-        this.clearTimers();
-        this.transitioning = false;
-        this.started = false;
-        this.starting = false;
-        var next = this.pick();
-        if (next < 0) { this.failed(); return; }
-        this.current = next;
-        this.starting = true;
-        var video = this.video;
-        video.pause();
-        video.style.opacity = '0';
-        video.muted = true;
-        video.volume = 0;
-        video.src = CLIPS[next].url;
-        this.armStall();
+    Cinematic.prototype.resetVideo = function (slot) {
+        var target = this.slots[slot];
+        if (!target) return;
+        var video = target.video;
         try {
+            video.pause();
+            video.removeAttribute('src');
             video.load();
-            var promise = video.play();
+        } catch (error) {}
+        target.clip = -1;
+        target.loaded = false;
+        target.starting = false;
+        target.playing = false;
+        target.exhausted = false;
+        video.style.opacity = '0';
+    };
+
+    Cinematic.prototype.startClip = function (slot, index, initial) {
+        if (this.destroyed) return;
+        if (index < 0) {
+            this.reportUnavailable();
+            return;
+        }
+        this.resetVideo(slot);
+        var target = this.slots[slot];
+        target.clip = index;
+        target.video.muted = true;
+        target.video.volume = 0;
+        target.video.style.zIndex = initial ? '2' : '3';
+        target.video.style.transition = 'opacity ' + this.fade() + 'ms ease-in-out';
+        target.video.src = CLIPS[index].url;
+        if (!initial) this.pending = slot;
+        this.clearLoading();
+        var self = this;
+        this.loadingTimer = setTimeout(function () {
+            if (!self.destroyed && target.clip === index && !target.loaded) self.onError(slot);
+        }, MAX_LOAD_MS);
+        try {
+            target.video.load();
+            if (initial) {
+                this.active = slot;
+                this.startPlaying(slot);
+            }
+        } catch (error) {
+            this.onError(slot);
+        }
+    };
+
+    Cinematic.prototype.startPlaying = function (slot) {
+        if (this.destroyed || slot < 0) return;
+        var target = this.slots[slot];
+        if (!target || target.starting || target.playing) return;
+        target.starting = true;
+        target.video.muted = true;
+        target.video.volume = 0;
+        var self = this;
+        try {
+            var promise = target.video.play();
             if (promise && typeof promise.catch === 'function') {
                 promise.catch(function () {
-                    // A loadeddata retry helps on older Tizen WebViews.
-                    if (!self.destroyed && self.starting) {
-                        self.timer = setTimeout(function () {
-                            if (!self.destroyed && self.starting) self.failed();
-                        }, 2500);
+                    if (!self.destroyed && target.clip >= 0 && !target.playing) {
+                        self.onError(slot);
                     }
                 });
             }
-        } catch (error) { this.failed(); }
+        } catch (error) { this.onError(slot); }
     };
 
-    Cinematic.prototype.failed = function () {
+    Cinematic.prototype.onLoaded = function (slot) {
+        if (this.destroyed) return;
+        var target = this.slots[slot];
+        if (target.clip < 0) return;
+        target.loaded = true;
+        this.clearLoading();
+        if (slot === this.pending) this.checkTransition();
+    };
+
+    Cinematic.prototype.onPlaying = function (slot) {
+        if (this.destroyed) return;
+        var target = this.slots[slot];
+        if (target.clip < 0) return;
+        target.playing = true;
+        target.starting = false;
+        this.failedCount = 0;
+        this.clearLoading();
+        if (slot === this.pending) {
+            this.crossfade();
+        } else if (slot === this.active) {
+            var self = this;
+            this.startTimer = setTimeout(function () {
+                if (!self.destroyed) target.video.style.opacity = '1';
+            }, 90);
+        }
+    };
+
+    Cinematic.prototype.queueNext = function () {
+        if (this.destroyed || this.pending >= 0 || this.swapping || this.active < 0) return;
+        var next = this.takeClip();
+        if (next < 0) {
+            this.reportUnavailable();
+            return;
+        }
+        this.startClip(1 - this.active, next, false);
+    };
+
+    Cinematic.prototype.checkTransition = function () {
+        if (this.destroyed || this.swapping || this.pending < 0) return;
+        if (!this.slots[this.pending].loaded) return;
+        var current = this.slots[this.active];
+        if (!current) return;
+        var video = current.video;
+        var left = video.duration - video.currentTime;
+        if (current.exhausted || (isFinite(left) && left <= this.fade() / 1000 + 0.7)) {
+            this.startPlaying(this.pending);
+        }
+    };
+
+    Cinematic.prototype.onTime = function (slot) {
+        if (this.destroyed || slot !== this.active || this.swapping) return;
+        var current = this.slots[slot], video = current.video;
+        if (!isFinite(video.duration) || video.duration <= 0) return;
+        var left = video.duration - video.currentTime;
+        if (left <= Math.max(14, this.fade()/1000 + 5)) this.queueNext();
+        if (left <= this.fade() / 1000 + 0.7) this.checkTransition();
+    };
+
+    Cinematic.prototype.onEnded = function (slot) {
+        if (this.destroyed || slot !== this.active || this.swapping) return;
+        this.slots[slot].exhausted = true;
+        this.queueNext();
+        this.checkTransition();
+        // HTML5 video preserves the last decoded frame while the next video buffers.
+    };
+
+    Cinematic.prototype.crossfade = function () {
+        if (this.destroyed || this.swapping || this.pending < 0) return;
+        var oldSlot = this.active;
+        var newSlot = this.pending;
+        var old = this.slots[oldSlot].video;
+        var next = this.slots[newSlot].video;
+        this.swapping = true;
+        next.style.zIndex = '3';
+        old.style.zIndex = '2';
+        next.style.opacity = '0';
         var self = this;
-        if (this.destroyed || this.transitioning) return;
-        this.clearTimers();
-        this.starting = false;
-        this.started = false;
-        this.tried[this.current] = true;
-        this.triedCount = Object.keys(this.tried).length;
-        this.video.style.opacity = '0';
-        this.transitioning = true;
-        this.timer = setTimeout(function () {
-            self.transitioning = false;
+        clearTimeout(this.startTimer);
+        this.startTimer = setTimeout(function () {
             if (self.destroyed) return;
-            if (self.triedCount >= self.order.length) {
-                self.video.pause();
-                self.video.removeAttribute('src');
-                self.root.append($('<div></div>').text('Видео недоступны. Проверьте интернет и попробуйте позже.').css({
-                    position: 'absolute', top: '48%', left: '5%', width: '90%',
-                    color: '#baaac7', textAlign: 'center', fontSize: '1.5em'
-                }));
-                return;
+            next.style.opacity = '1';
+            old.style.opacity = '0';
+            self.transitionTimer = setTimeout(function () {
+                if (self.destroyed) return;
+                self.active = newSlot;
+                self.pending = -1;
+                self.swapping = false;
+                self.resetVideo(oldSlot);
+                next.style.zIndex = '2';
+                // If a clip is very short, prebuffer the next one immediately.
+                self.onTime(newSlot);
+            }, self.fade() + 100);
+        }, 100);
+    };
+
+    Cinematic.prototype.onError = function (slot) {
+        if (this.destroyed || this.swapping) return;
+        var target = this.slots[slot];
+        if (!target || target.clip < 0) return;
+        this.failedClips[target.clip] = true;
+        this.failedCount++;
+        this.clearLoading();
+        this.resetVideo(slot);
+        if (slot === this.pending) {
+            this.pending = -1;
+            this.queueNext();
+        } else if (slot === this.active) {
+            this.active = -1;
+            if (this.failedCount >= CLIPS.length) {
+                this.reportUnavailable();
+            } else {
+                var next = this.takeClip();
+                this.startClip(slot, next, true);
             }
-            self.playNext();
-        }, 250);
+        }
+    };
+
+    Cinematic.prototype.reportUnavailable = function () {
+        if (!this.info || this.destroyed) return;
+        this.info.text('Видео недоступны. Проверьте интернет или попробуйте другую тему.');
+        this.info.css({ opacity: 1 });
     };
 
     Cinematic.prototype.render = function () {
@@ -303,17 +448,13 @@
 
     Cinematic.prototype.destroy = function () {
         this.destroyed = true;
-        this.clearTimers();
-        if (this.video) {
-            this.video.pause();
-            this.video.removeAttribute('src');
-            this.video.load();
-            this.video = null;
-        }
-        if (this.root) {
-            this.root.remove();
-            this.root = null;
-        }
+        this.clearLoading();
+        clearTimeout(this.startTimer);
+        clearTimeout(this.transitionTimer);
+        for (var i = 0; i < this.slots.length; i++) this.resetVideo(i);
+        this.slots = [];
+        if (this.root) this.root.remove();
+        this.root = null;
     };
 
     function addSettings() {
@@ -354,10 +495,17 @@
         });
         Lampa.SettingsApi.addParam({
             component: COMPONENT,
+            param: { name: PREFIX + 'chapter', type: 'select', values: {
+                '5': '5 минут', '7': '7 минут', '10': '10 минут'
+            }, 'default': '7' },
+            field: { name: 'Время одной темы', description: 'Длинные тематические сцены из нескольких UHD-роликов' }
+        });
+        Lampa.SettingsApi.addParam({
+            component: COMPONENT,
             param: { name: PREFIX + 'fade', type: 'select', values: {
-                '500': 'Быстро', '900': 'Плавно', '1400': 'Очень плавно'
-            }, 'default': '900' },
-            field: { name: 'Переходы', description: 'Мягкое затемнение между роликами' }
+                '500': 'Быстро', '2800': 'Плавно', '1400': 'Очень плавно'
+            }, 'default': '2800' },
+            field: { name: 'Переходы', description: 'Настоящий crossfade: новое видео поверх предыдущего' }
         });
         Lampa.SettingsApi.addParam({
             component: COMPONENT,
@@ -400,7 +548,7 @@
             else if (!document.hidden && nativeScreensaver()) applyNative();
         });
         applyNative();
-        console.log('[Cinematic Screensaver] 1.0.0 ready, 9 curated UHD clips');
+        console.log('[Cinematic Screensaver] 2.0.0 ready, 21 curated UHD clips, native crossfade');
     }
 
     if (window.appready && window.Lampa) init();
