@@ -2,17 +2,31 @@
 
 Бесплатный плагин **видеозаставки 4K без звука** для Lampa — в первую очередь рассчитан на телевизоры Samsung Tizen. Интегрируется со **встроенным механизмом Screensaver Lampa**, а не запускает таймер поверх видеоплеера.
 
-## Ссылка для установки
+## Установка на Samsung Tizen / Smart TV
 
-Прямая ссылка на JS-плагин:
+**Используйте ссылку jsDelivr CDN**, которая раздаёт JavaScript с подходящим MIME-типом:
 
 ```text
-https://raw.githubusercontent.com/DoubleGGameRR/Lampa-Cinematic-Screensaver/main/plugin.js
+https://cdn.jsdelivr.net/gh/DoubleGGameRR/Lampa-Cinematic-Screensaver@main/plugin.js
 ```
 
-Откройте **Lampa → Настройки → Расширения / Плагины → Добавить плагин**, вставьте эту ссылку и перезапустите Lampa. Затем откройте **Настройки → Cinematic Screensaver**.
+**Не используйте на телевизоре старую `raw.githubusercontent.com` ссылку:** GitHub Raw может передавать JavaScript с MIME `text/plain`, из-за чего браузер Tizen сообщает, что плагин не удалось загрузить.
 
-В настройках доступна кнопка **«Показать сейчас»** для проверки, не дожидаясь таймера.
+Если уже установлен старый адрес:
+
+1. Откройте **Lampa → Настройки → Расширения / Плагины**.
+2. **Удалите старую ссылку на `raw.githubusercontent.com/DoubleGGameRR/Lampa-Cinematic-Screensaver/main/plugin.js`.** Изменения в GitHub не могут автоматически заменить установленный на ТВ адрес.
+3. Выберите **Добавить плагин**, вставьте ссылку **jsDelivr** из блока выше.
+4. **Полностью перезапустите Lampa**.
+5. Откройте **Настройки → Cinematic Screensaver** и нажмите **«Показать сейчас»**, чтобы проверить без ожидания.
+
+Альтернативный CDN, если jsDelivr недоступен:
+
+```text
+https://raw.githack.com/DoubleGGameRR/Lampa-Cinematic-Screensaver/main/plugin.js
+```
+
+Оба адреса загружают файл из этого GitHub-репозитория. CDN-кэш может задерживать появление изменений.
 
 ## Возможности
 
